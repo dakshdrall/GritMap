@@ -1,19 +1,17 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
-
 export const metadata: Metadata = {
-  title: 'GritMap — Find. Join. Dominate.',
+  title: 'GritMap — Find your next start line.',
   description: 'Discover fitness events worldwide. Hyrox, marathons, cycling races, triathlons and more.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={geist.variable}>
-      <body className="bg-[#0A1628] text-white min-h-screen font-sans antialiased">
+    <html lang="en">
+      <body className={`${GeistSans.className} bg-[#FAFAF7] text-[#0A0A0A] min-h-screen antialiased`}>
         <Navbar />
         {children}
       </body>

@@ -24,27 +24,40 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-[#0A1628] border-b border-white/10 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-[#00D4AA] font-bold text-xl tracking-tight">
-          GritMap
+    <nav className="gm-nav bg-[#FAFAF7] sticky top-0 z-50">
+      <div className="max-w-[1200px] mx-auto px-7 max-md:px-4 h-14 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-[#0A0A0A] font-medium text-[15px] uppercase tracking-[0.05em]"
+        >
+          GRITMAP
         </Link>
 
-        <div className="flex items-center gap-6">
-          <Link href="/" className="text-white/70 hover:text-white text-sm font-medium transition-colors">
+        <div className="flex items-center gap-7">
+          <Link
+            href="/"
+            className="text-[13px] text-[#6B6B66] hover:text-[#0A0A0A] transition-colors duration-150"
+          >
             Discover
           </Link>
-          <Link href="/host" className="text-white/70 hover:text-white text-sm font-medium transition-colors">
+          <Link
+            href="/host"
+            className="text-[13px] text-[#6B6B66] hover:text-[#0A0A0A] transition-colors duration-150"
+          >
             Host
           </Link>
+
           {userEmail ? (
             <>
-              <Link href="/profile" className="text-white/70 hover:text-white text-sm font-medium transition-colors">
+              <Link
+                href="/profile"
+                className="text-[13px] text-[#6B6B66] hover:text-[#0A0A0A] transition-colors duration-150"
+              >
                 Profile
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-[#64748B] hover:text-white text-sm transition-colors"
+                className="text-[13px] text-[#6B6B66] hover:text-[#0A0A0A] transition-colors duration-150"
               >
                 Sign out
               </button>
@@ -52,7 +65,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/auth"
-              className="bg-[#00D4AA] text-[#0A1628] text-sm font-semibold px-4 py-2 rounded-full hover:bg-[#00bfa0] transition-colors"
+              className="bg-[#0A0A0A] text-[#FAFAF7] text-[13px] font-medium px-[18px] py-2 rounded-full hover:bg-[#1f1f1f] transition-colors duration-150"
             >
               Sign in
             </Link>

@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
+/* 0.5px card border + hover lift — used across EventCard, detail page, profile */
+.gm-card {
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.gm-card:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Form inputs */
+.gm-input {
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  transition: border-color 150ms ease;
+}
+.gm-input:focus {
+  border-color: #0A0A0A;
+  outline: none;
+}
+
+/* Hairline divider */
+.gm-divider {
+  height: 0.5px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Navbar bottom border */
+.gm-nav {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
 }
