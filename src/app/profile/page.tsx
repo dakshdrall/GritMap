@@ -13,11 +13,18 @@ function formatMonthYear(dateString: string) {
   return date.toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
+function normalizeUrl(url: string | null | undefined): string {
+  if (!url) return "#";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
 export default async function ProfilePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) redirect("/auth");
+
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
   const { data: savedRecords } = await supabase
     .from("saved_events")
@@ -29,27 +36,63 @@ export default async function ProfilePage() {
     ? await supabase.from("events").select("*").in("id", eventIds)
     : { data: [] };
 
-  const initials = (user.email || "U").substring(0, 2).toUpperCase();
+  const displayName = profile?.display_name || user.email?.split("@")[0] || "User";
+  const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
     <main style={{ background: "#FAFAF7", minHeight: "100vh" }}>
       <section style={{ maxWidth: 900, margin: "0 auto", padding: "64px 32px 96px" }}>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 64 }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F0EFE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500, color: "#0A0A0A", letterSpacing: "0.05em" }}>
-            {initials}
-          </div>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", color: "#0A0A0A" }}>
-              {user.email?.split("@")[0]}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, marginBottom: 32, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "0.5px solid rgba(0,0,0,0.08)" }} />
+            ) : (
+              <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#F0EFE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, color: "#0A0A0A", letterSpacing: "0.05em" }}>
+                {initials}
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color: "#0A0A0A" }}>
+                {displayName}
+              </div>
+              <div style={{ fontSize: 13, color: "#6B6B66", marginTop: 2 }}>{user.email}</div>
             </div>
-            <div style={{ fontSize: 13, color: "#6B6B66" }}>{user.email}</div>
           </div>
+          <a href="/profile/edit" style={{ background: "transparent", color: "#0A0A0A", border: "0.5px solid rgba(0,0,0,0.15)", borderRadius: 999, padding: "10px 20px", fontSize: 13, fontWeight: 500 }}>
+            Edit profile
+          </a>
         </div>
+
+        {profile?.bio && (
+          <p style={{ fontSize: 15, color: "#0A0A0A", lineHeight: 1.6, margin: "0 0 24px", maxWidth: 600 }}>
+            {profile.bio}
+          </p>
+        )}
+
+        {(profile?.instagram || profile?.strava || profile?.website) && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 32 }}>
+            {profile?.instagram && (
+              <a href={profile.instagram.startsWith("http") ? profile.instagram : `https://instagram.com/${profile.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#0A0A0A", border: "0.5px solid rgba(0,0,0,0.15)", borderRadius: 999, padding: "6px 14px", letterSpacing: "0.05em" }}>
+                Instagram →
+              </a>
+            )}
+            {profile?.strava && (
+              <a href={profile.strava.startsWith("http") ? profile.strava : `https://strava.com/athletes/${profile.strava}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#0A0A0A", border: "0.5px solid rgba(0,0,0,0.15)", borderRadius: 999, padding: "6px 14px", letterSpacing: "0.05em" }}>
+                Strava →
+              </a>
+            )}
+            {profile?.website && (
+              <a href={normalizeUrl(profile.website)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#0A0A0A", border: "0.5px solid rgba(0,0,0,0.15)", borderRadius: 999, padding: "6px 14px", letterSpacing: "0.05em" }}>
+                Website →
+              </a>
+            )}
+          </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 32, padding: "24px 0", borderTop: "0.5px solid rgba(0,0,0,0.08)", borderBottom: "0.5px solid rgba(0,0,0,0.08)", marginBottom: 64 }}>
           <div>
-            <div style={{ fontSize: 28, fontWeight: 500, letterSpacing: "-0.02em", color: "#0A0A0A", lineHeight: 1 }}>0</div>
+            <div style={{ fontSize: 28, fontWeight: 500, letterSpacing: "-0.02em", color: "#0A0A0A", lineHeight: 1 }}>{profile?.xp || 0}</div>
             <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8A8A82", textTransform: "uppercase", marginTop: 8, fontWeight: 500 }}>XP</div>
           </div>
           <div>
@@ -75,11 +118,7 @@ export default async function ProfilePage() {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
             {savedEvents.map((event: any) => (
-              <a
-                key={event.id}
-                href={`/events/${event.id}`}
-                style={{ background: "#FFFFFF", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", minHeight: 220 }}
-              >
+              <a key={event.id} href={`/events/${event.id}`} style={{ background: "#FFFFFF", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", minHeight: 220 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 500 }}>
                   <span style={{ color: difficultyColor[event.difficulty] || "#6B6B66" }}>{event.sport_type} · {event.difficulty}</span>
                   <span style={{ color: "#8A8A82" }}>{formatMonthYear(event.date)}</span>
