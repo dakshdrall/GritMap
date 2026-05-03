@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import { createClient } from "@/utils/supabase/server";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
   description: "Discover Hyrox, marathons, cycling races, triathlons worldwide.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <html lang="en">
       <body className={geist.variable} style={{ background: "#FAFAF7", margin: 0, fontFamily: "var(--font-geist-sans), system-ui" }}>
@@ -18,7 +22,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <a href="/" style={{ fontSize: 13, color: "#6B6B66", padding: "8px 14px" }}>Discover</a>
             <a href="/host" style={{ fontSize: 13, color: "#6B6B66", padding: "8px 14px" }}>Host</a>
-            <a href="/auth" style={{ background: "#0A0A0A", color: "#FAFAF7", padding: "8px 18px", borderRadius: 999, fontSize: 13, fontWeight: 500, marginLeft: 8 }}>Sign in</a>
+            {user ? (
+              <a href="/profile" style={{ background: "#0A0A0A", color: "#FAFAF7", padding: "8px 18px", borderRadius: 999, fontSize: 13, fontWeight: 500, marginLeft: 8 }}>
+                Profile
+              </a>
+            ) : (
+              <a href="/auth" style={{ background: "#0A0A0A", color: "#FAFAF7", padding: "8px 18px", borderRadius: 999, fontSize: 13, fontWeight: 500, marginLeft: 8 }}>
+                Sign in
+              </a>
+            )}
           </div>
         </nav>
         {children}
