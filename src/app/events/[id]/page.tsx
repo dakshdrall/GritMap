@@ -1,100 +1,88 @@
-import { createClient } from '@/utils/supabase/server'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import SaveButton from '@/components/SaveButton'
+import { createClient } from "@/utils/supabase/server";
+import { notFound } from "next/navigation";
 
-const SPORT_EMOJIS: Record<string, string> = {
-  Running: '🏃',
-  Cycling: '🚴',
-  Hyrox: '💪',
-  Triathlon: '🏊',
-  Trail: '🥾',
+const difficultyColor: Record<string, string> = {
+  Easy: "#2D7A3D",
+  Medium: "#B8862E",
+  Hard: "#C44A2E",
+  Elite: "#8B2D2D",
+};
+
+function formatLongDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
-const DIFFICULTY_STYLES: Record<string, string> = {
-  Easy: 'bg-green-500/20 text-green-400 border-green-500/30',
-  Medium: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  Hard: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  Elite: 'bg-red-500/20 text-red-400 border-red-500/30',
-}
+export default async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: event } = await supabase.from("events").select("*").eq("id", id).single();
 
-export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = await createClient()
-
-  const [{ data: event }, { data: { user } }] = await Promise.all([
-    supabase.from('events').select('*').eq('id', id).single(),
-    supabase.auth.getUser(),
-  ])
-
-  if (!event) notFound()
-
-  const emoji = SPORT_EMOJIS[event.sport_type] ?? '🏆'
-  const diffStyle = event.difficulty
-    ? (DIFFICULTY_STYLES[event.difficulty] ?? 'bg-white/10 text-white/60 border-white/20')
-    : null
-
-  const formattedDate = new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  if (!event) notFound();
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
-      <Link href="/" className="text-[#64748B] hover:text-white text-sm mb-8 inline-block transition-colors">
-        ← Back to events
-      </Link>
+    <main style={{ background: "#FAFAF7", minHeight: "100vh" }}>
+      <section style={{ maxWidth: 900, margin: "0 auto", padding: "48px 32px 96px" }}>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-        <div className="flex items-start justify-between mb-6">
-          <span className="text-5xl">{emoji}</span>
-          {diffStyle && (
-            <span className={`text-sm font-semibold px-3 py-1.5 rounded-full border ${diffStyle}`}>
-              {event.difficulty}
-            </span>
-          )}
+        <a href="/" style={{ fontSize: 13, color: "#6B6B66", marginBottom: 48, display: "inline-block" }}>
+          ← Back to events
+        </a>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 500, marginTop: 32, marginBottom: 24 }}>
+          <span style={{ color: difficultyColor[event.difficulty] || "#6B6B66" }}>
+            {event.sport_type} · {event.difficulty}
+          </span>
+          <span style={{ color: "#8A8A82" }}>{formatLongDate(event.date)}</span>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-2">{event.name}</h1>
-        <p className="text-[#64748B] text-lg mb-8">{event.city}, {event.country}</p>
+        <h1 style={{ fontSize: "clamp(40px, 6vw, 64px)", lineHeight: 0.96, letterSpacing: "-0.04em", color: "#0A0A0A", fontWeight: 500, margin: "0 0 12px" }}>
+          {event.name}
+        </h1>
+        <p style={{ fontSize: 18, color: "#6B6B66", margin: "0 0 64px" }}>
+          {event.city}, {event.country}
+        </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          {[
-            { label: 'Date', value: formattedDate },
-            { label: 'Distance', value: event.distance ?? '—' },
-            { label: 'Price', value: event.price, teal: true },
-            { label: 'Sport', value: event.sport_type },
-          ].map(({ label, value, teal }) => (
-            <div key={label} className="bg-white/5 rounded-xl p-4">
-              <p className="text-[#64748B] text-xs mb-1">{label}</p>
-              <p className={`text-sm font-medium ${teal ? 'text-[#00D4AA]' : 'text-white'}`}>{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {event.description && (
-          <div className="mb-8">
-            <h2 className="text-white font-semibold mb-2">About this event</h2>
-            <p className="text-[#64748B] leading-relaxed">{event.description}</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 32, padding: "32px 0", borderTop: "0.5px solid rgba(0,0,0,0.08)", borderBottom: "0.5px solid rgba(0,0,0,0.08)", marginBottom: 48 }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8A8A82", textTransform: "uppercase", fontWeight: 500, marginBottom: 8 }}>Distance</div>
+            <div style={{ fontSize: 16, color: "#0A0A0A", fontWeight: 500 }}>{event.distance || "—"}</div>
           </div>
-        )}
-
-        <div className="flex gap-3">
-          {event.registration_url && (
-            <a
-              href={event.registration_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 bg-[#00D4AA] text-[#0A1628] font-semibold py-3 px-6 rounded-xl text-center hover:bg-[#00bfa0] transition-colors"
-            >
-              Register Now →
-            </a>
-          )}
-          <SaveButton eventId={event.id} userId={user?.id ?? null} />
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8A8A82", textTransform: "uppercase", fontWeight: 500, marginBottom: 8 }}>Price</div>
+            <div style={{ fontSize: 16, color: "#0A0A0A", fontWeight: 500 }}>{event.price}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8A8A82", textTransform: "uppercase", fontWeight: 500, marginBottom: 8 }}>Sport</div>
+            <div style={{ fontSize: 16, color: "#0A0A0A", fontWeight: 500 }}>{event.sport_type}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8A8A82", textTransform: "uppercase", fontWeight: 500, marginBottom: 8 }}>Difficulty</div>
+            <div style={{ fontSize: 16, color: difficultyColor[event.difficulty] || "#0A0A0A", fontWeight: 500 }}>{event.difficulty}</div>
+          </div>
         </div>
-      </div>
+
+        <div style={{ marginBottom: 48 }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8A8A82", textTransform: "uppercase", fontWeight: 500, marginBottom: 16 }}>About this event</div>
+          <p style={{ fontSize: 17, color: "#0A0A0A", lineHeight: 1.6, margin: 0 }}>{event.description || "No description provided."}</p>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <a
+            href={event.registration_url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ flex: 1, minWidth: 200, background: "#0A0A0A", color: "#FAFAF7", padding: "18px 32px", borderRadius: 999, fontSize: 15, fontWeight: 500, textAlign: "center", letterSpacing: "0.02em" }}
+          >
+            Register now →
+          </a>
+          <button
+            style={{ background: "transparent", color: "#0A0A0A", padding: "18px 28px", borderRadius: 999, fontSize: 15, fontWeight: 500, border: "0.5px solid rgba(0,0,0,0.15)", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ☆ Save
+          </button>
+        </div>
+
+      </section>
     </main>
-  )
+  );
 }

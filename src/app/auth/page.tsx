@@ -1,115 +1,92 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const supabase = createClient()
-  const router = useRouter()
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setMessage(null)
-    setLoading(true)
-
-    if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        setError(error.message)
-      } else {
-        router.push('/')
-        router.refresh()
-      }
+    if (mode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+      else router.push("/profile");
     } else {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) {
-        setError(error.message)
-      } else {
-        setMessage('Check your email to confirm your account.')
-      }
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) setError(error.message);
+      else setError("Check your email to confirm your account.");
     }
-    setLoading(false)
+    setLoading(false);
   }
 
+  const inputStyle = {
+    width: "100%",
+    height: 48,
+    padding: "14px 16px",
+    fontSize: 15,
+    border: "0.5px solid rgba(0,0,0,0.15)",
+    borderRadius: 12,
+    background: "#FFFFFF",
+    color: "#0A0A0A",
+    outline: "none",
+    fontFamily: "inherit",
+    boxSizing: "border-box" as const,
+    marginBottom: 12,
+  };
+
   return (
-    <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <span className="text-[#00D4AA] font-bold text-2xl">GritMap</span>
-          <h1 className="text-white font-bold text-2xl mt-2">
-            {mode === 'login' ? 'Welcome back' : 'Join GritMap'}
-          </h1>
-          <p className="text-[#64748B] text-sm mt-1">
-            {mode === 'login' ? 'Sign in to your account' : 'Create your account to save events and host races'}
-          </p>
+    <main style={{ background: "#FAFAF7", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+
+        <div style={{ fontSize: 11, letterSpacing: "0.22em", color: "#8A8A82", textTransform: "uppercase", fontWeight: 500, marginBottom: 16, textAlign: "center" }}>
+          {mode === "signin" ? "Welcome back" : "Join GritMap"}
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-          <div className="flex bg-white/5 rounded-xl p-1 mb-6">
-            <button
-              onClick={() => { setMode('login'); setError(null); setMessage(null) }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-                mode === 'login' ? 'bg-[#00D4AA] text-[#0A1628]' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => { setMode('signup'); setError(null); setMessage(null) }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-                mode === 'signup' ? 'bg-[#00D4AA] text-[#0A1628]' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Sign up
-            </button>
-          </div>
+        <h1 style={{ fontSize: 36, fontWeight: 500, letterSpacing: "-0.03em", color: "#0A0A0A", textAlign: "center", margin: "0 0 8px" }}>
+          {mode === "signin" ? "Sign in" : "Create account"}
+        </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-white/60 text-xs mb-1.5">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#00D4AA] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-white/60 text-xs mb-1.5">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#00D4AA] transition-colors"
-              />
-            </div>
+        <p style={{ fontSize: 14, color: "#6B6B66", textAlign: "center", margin: "0 0 40px" }}>
+          {mode === "signin" ? "Continue to your account" : "Find every event worth showing up for"}
+        </p>
 
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-            {message && <p className="text-[#00D4AA] text-sm">{message}</p>}
+        <form onSubmit={handleSubmit}>
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ ...inputStyle, marginBottom: 24 }} />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#00D4AA] text-[#0A1628] font-semibold py-3 rounded-xl hover:bg-[#00bfa0] transition-colors disabled:opacity-50 mt-2"
-            >
-              {loading ? 'Loading...' : mode === 'login' ? 'Sign in' : 'Create account'}
-            </button>
-          </form>
-        </div>
+          {error && <p style={{ fontSize: 13, color: "#C44A2E", margin: "0 0 16px", textAlign: "center" }}>{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ width: "100%", height: 48, background: "#0A0A0A", color: "#FAFAF7", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 500, cursor: loading ? "wait" : "pointer", fontFamily: "inherit", opacity: loading ? 0.6 : 1 }}
+          >
+            {loading ? "..." : (mode === "signin" ? "Sign in" : "Create account")}
+          </button>
+        </form>
+
+        <p style={{ fontSize: 13, color: "#6B6B66", textAlign: "center", margin: "32px 0 0" }}>
+          {mode === "signin" ? "New to GritMap? " : "Already have an account? "}
+          <button
+            onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
+            style={{ background: "none", border: "none", padding: 0, color: "#0A0A0A", textDecoration: "underline", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            {mode === "signin" ? "Create an account" : "Sign in"}
+          </button>
+        </p>
+
       </div>
     </main>
-  )
+  );
 }
