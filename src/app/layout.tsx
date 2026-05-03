@@ -14,6 +14,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  let avatarUrl: string | null = null;
+  let displayName = "";
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("avatar_url, display_name")
+      .eq("id", user.id)
+      .single();
+    avatarUrl = profile?.avatar_url || null;
+    displayName = profile?.display_name || user.email?.split("@")[0] || "U";
+  }
+  const initials = (displayName || "U").substring(0, 2).toUpperCase();
+
   return (
     <html lang="en">
       <body className={geist.variable} style={{ background: "#FAFAF7", margin: 0, fontFamily: "var(--font-geist-sans), system-ui" }}>
@@ -23,7 +36,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <a href="/" style={{ fontSize: 13, color: "#6B6B66", padding: "8px 14px" }}>Discover</a>
             <a href="/host" style={{ fontSize: 13, color: "#6B6B66", padding: "8px 14px" }}>Host</a>
             {user ? (
-              <a href="/profile" style={{ background: "#0A0A0A", color: "#FAFAF7", padding: "8px 18px", borderRadius: 999, fontSize: 13, fontWeight: 500, marginLeft: 8 }}>
+              <a href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, background: "#0A0A0A", color: "#FAFAF7", padding: "5px 14px 5px 5px", borderRadius: 999, fontSize: 13, fontWeight: 500, marginLeft: 8 }}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                ) : (
+                  <span style={{ width: 26, height: 26, borderRadius: "50%", background: "#FAFAF7", color: "#0A0A0A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, letterSpacing: "0.05em", flexShrink: 0 }}>
+                    {initials}
+                  </span>
+                )}
                 Profile
               </a>
             ) : (
